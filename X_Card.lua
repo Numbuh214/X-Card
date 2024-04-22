@@ -256,7 +256,10 @@ function evaluate_poker_hand(hand)
   for i=1,#of_a_kind do
     results[of_a_kind[i]] = get_X_same(i+1,hand)
   end
-  if #results["Pair"] == 2 then
+  results["Flush"] = get_flush(hand)
+  results["Straight"] = get_straight(hand)
+  
+  if #results["Pair"] == 2 and #results["Straight"] == 0 then
     results["Two Pair"] = 
 	{
 	  {
@@ -296,8 +299,6 @@ function evaluate_poker_hand(hand)
 	  }
 	end
   end
-  results["Flush"] = get_flush(hand)
-  results["Straight"] = get_straight(hand)
   
   if results["Flush"] ~= nil then
     if results["Straight"] ~=nil then

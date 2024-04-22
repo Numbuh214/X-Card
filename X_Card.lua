@@ -22,7 +22,7 @@ function SMODS.INIT.X_Card()
         extra = {
         },
       },
-      loc_txt = 
+      loc_txt =
       {
         "When played, becomes the",
         "best {C:attention}unique{} rank possible"
@@ -33,7 +33,7 @@ function SMODS.INIT.X_Card()
     --G.P_CENTER_POOLS['Enhanced'][x_card.order-1] = x_card
     --sendDebugMessage(tostring(G.P_CENTER_POOLS['Enhanced'][x_card.order-1].name))
     --G.localization.descriptions['Enhanced']['m_xcard']=
-    
+
     local m_xcard_sprite = SMODS.Sprite:new(
       "m_xcard",
       this_mod.path,
@@ -50,12 +50,12 @@ function SMODS.INIT.X_Card()
       "asset_atli"
     )
     pagecupssprite:register()
-    local c_pagecups = SMODS.Tarot:new("Page of Cups", "pagecups", {mod_conv = 'm_xcard', max_highlighted = 5}, {x = 0, y = 0}, {
+    local c_pagecups = SMODS.Tarot:new("Page of Cups", "pagecups", {mod_conv = 'm_xcard', max_highlighted = 1}, {x = 0, y = 0}, {
       name = "Page of Cups",
       text = {
         "Enhances {C:attention}#1#{} selected",
-        "cards into ",
-        "{C:attention}#2#s"
+        "card into an",
+        "{C:attention}#2#"
       }
     }, 2, 1.0, "Enhance", true, true, "c_pagecups")
     c_pagecups:register()
@@ -146,7 +146,7 @@ end
 local clickref = Card.click
 function Card:click()
   clickref(self)
-  if self.highlighted ~= true then 
+  if self.highlighted ~= true then
     if self.ability and self.ability.extra and self.ability.extra.fake_rank ~= nil then
 	  self.ability.extra.fake_rank = nil
 	end
@@ -200,7 +200,7 @@ function evaluate_poker_hand(hand)
       table.insert(x_cards, hand[i])
     end
   end
-  
+
   local results = {
     ["Flush Five"] = {},
     ["Flush House"] = {},
@@ -216,7 +216,7 @@ function evaluate_poker_hand(hand)
     ["High Card"] = {},
     top = nil
   }
-  
+
   local order = {
     "Flush Five",
     "Flush House",
@@ -231,15 +231,15 @@ function evaluate_poker_hand(hand)
     "Pair",
     "High Card",
   }
-  
+
   local of_a_kind = {
     "Three of a Kind",
     "Four of a Kind",
     "Five of a Kind"
   }
-  
+
   results = evaluate_poker_hand_ref(hand)
-  
+
   if #hand >=4 and #results["Straight"] == 0 then
     results["Two Pair"] = get_two_pair(results)
   end
@@ -260,7 +260,7 @@ function evaluate_poker_hand(hand)
     end
     --sendDebugMessage("Hand is not "..order[i]..".")
   end
-  
+
   if results["top"] == results["Straight"] or results["top"] == results["Straight Flush"] then
     for i=1, #hand do
 	  if hand[i].config.center == G.P_CENTERS['m_xcard'] then
@@ -268,7 +268,7 @@ function evaluate_poker_hand(hand)
 	  end
 	end
   end
-  
+
   local x_cards = {}
   for i=1,#hand do
     if hand[i].config.center == G.P_CENTERS['m_xcard'] then
@@ -318,12 +318,12 @@ function get_full_house(results)
   if (#tri == 0) then return {} end
   local pair = results["Pair"]
   if (#pair == 0) then return {} end
-  
+
   local results = {}
   for k, v in pairs(tri) do
     for k2, v2 in pairs(pair) do
-	  if k2 ~= k then 
-	    
+	  if k2 ~= k then
+
 	  end
     end
   end

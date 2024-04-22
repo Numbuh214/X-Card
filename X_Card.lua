@@ -488,8 +488,7 @@ function get_straight(hand)
 		    hand[normal_ranks[i-1]]:get_id(),
 		    hand[normal_ranks[i]]:get_id()
 		  }
-		  if can_loop and 
-		  elseif ids[1]-ids[2] <= delta_var+#x_cards then
+		  if ids[1]-ids[2] <= delta_var+#x_cards then
 		    if ids[1]-ids[2] > delta_var then
 			  offset = i
 			end

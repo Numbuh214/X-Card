@@ -122,12 +122,14 @@ function Card:set_sprites(_center, _front)
 	  if self.base and self.base.suit_nominal then
 	    suit = self.base.suit_nominal * 100 - 1
 	  end
-	  if suit % 2 == 0 then
+	  if suit == 0 or suit == 2 then
 	    suit = 2 - suit
 	  end
       if (self.ability.extra.display_rank == true) then
         self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['cards_'..(G.SETTINGS.colourblind_option and 2 or 1)], {x = self.ability.extra.fake_rank-2, y = suit})
-      else
+      elseif suit > 3 then
+	    self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['m_xcard_'..string.gsub(string.lower(tostring(self.base.suit))," ","_")], {x = 0, y = 0})
+	  else
         self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['m_xcard'], {x = 0, y = suit})
       end
       self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['centers'], {x = 1, y = 0})
@@ -554,7 +556,17 @@ function get_straight(hand)
 			  table.insert(vals,ids[1])
 			  hand[normal_ranks[1]].ability.extra.add = true
 			end
-			table.insert(vals,ids[2])
+			table.insert(vals,ids[i])
+			hand[normal_ranks[i]].ability.extra.add = true
+		  elseif (can_loop and 14+ids[2]-ids[1] <= delta_var+#x_cards) then
+		    if ids[1]-ids[2] > delta_var then
+			  offset = i-#x_cards
+			end
+		    if i == 2 then
+			  table.insert(vals,ids[1])
+			  hand[normal_ranks[1]].ability.extra.add = true
+			end
+			table.insert(vals,ids[i])
 			hand[normal_ranks[i]].ability.extra.add = true
 		  end
 		end

@@ -106,7 +106,7 @@ function Card:set_sprites(_center, _front)
       if (self.ability.extra.display_rank == nil) then self.ability.extra.display_rank = false end
 	  local suit = 0
 	  if self.base and self.base.suit_nominal then
-	    self.base.suit_nominal * 100 - 1
+	    suit = self.base.suit_nominal * 100 - 1
 	  end
 	  if suit % 2 == 0 then
 	    suit = 2 - suit

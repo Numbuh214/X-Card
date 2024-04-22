@@ -12,7 +12,7 @@ function SMODS.INIT.X_Card()
     local x_card = {
       name = "X Card",
       slug = "m_xcard",
-      sprite = "m_xcard",
+      atlas = "m_xcard",
       pos = {x=0,y=2},
       effect = "X Card",
       label = "X Card",

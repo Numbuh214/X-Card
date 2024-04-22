@@ -439,7 +439,7 @@ end
 
 local get_straight_ref = get_straight
 function get_straight(hand)
-    local can_loop = next(find_joker('Superposition')) and SMods.findModByID("NumBalatro") ~= nil
+    local can_loop = next(find_joker('Superposition')) and SMODS.findModByID("NumBalatro") ~= nil
     local ret_hand = {}
     local ref_hand = {}
     local four_fingers = next(find_joker('Four Fingers'))

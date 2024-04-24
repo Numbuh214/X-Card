@@ -35,9 +35,16 @@ function SMODS.INIT.X_Card()
     --G.localization.descriptions['Enhanced']['m_xcard']=
 
     local m_xcard_sprite = SMODS.Sprite:new(
-      "m_xcard",
+      "m_xcard_1",
       this_mod.path,
-      "m_xcard.png",
+      "m_xcard_1.png",
+      71, 95,
+      "asset_atli"
+    )
+    local m_xcard_hi_sprite = SMODS.Sprite:new(
+      "m_xcard_2",
+      this_mod.path,
+      "m_xcard_2.png",
       71, 95,
       "asset_atli"
     )
@@ -56,6 +63,7 @@ function SMODS.INIT.X_Card()
       "asset_atli"
     )
     m_xcard_sprite:register()
+    m_xcard_hi_sprite:register()
     m_xcard_color_sprite:register()
     m_xcard_ink_sprite:register()
     local pagecupssprite = SMODS.Sprite:new(

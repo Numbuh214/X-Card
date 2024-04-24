@@ -149,13 +149,17 @@ function Card:set_sprites(_center, _front)
 	  if suit == 0 or suit == 2 then
 	    suit = 2 - suit
 	  end
-	  local contrast = (G.SETTINGS.colourblind_option and 2 or 1)
+	  local contrast = "_"..(G.SETTINGS.colourblind_option and 2 or 1)
       if (self.ability.display_rank == true) then
-        self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['cards_'..contrast], {x = self.ability.fake_rank-2, y = suit})
+        self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['cards'..contrast], {x = self.ability.fake_rank-2, y = suit})
       elseif suit > 3 then
-	    self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['m_xcard_'..string.gsub(string.lower(tostring(self.base.suit))," ","_")], {x = 0, y = 0})
+	    if G.ASSET_ATLAS['m_xcard_'..string.gsub(string.lower(tostring(self.base.suit))," ","_")..contrast] ~= nil then
+	      self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['m_xcard_'..string.gsub(string.lower(tostring(self.base.suit))," ","_")..contrast], {x = 0, y = 0})
+		else
+		  self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['m_xcard_'..string.gsub(string.lower(tostring(self.base.suit))," ","_")], {x = 0, y = 0})
+		end
 	  else
-        self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['m_xcard_'..contrast], {x = 0, y = suit})
+        self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['m_xcard'..contrast], {x = 0, y = suit})
       end
       self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['centers'], {x = 1, y = 0})
       self.children.center:set_sprite_pos({x = 1, y = 0})

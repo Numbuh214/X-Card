@@ -9,15 +9,21 @@
 
 function SMODS.INIT.X_Card()
     local this_mod = SMODS.findModByID("X_Card")
+	rank_names = {"Ten","Jack","Queen","King","Ace"}
+	for i=9,1,-1 do
+	  table.insert(rank_names,1,i)
+	end
+	print_table(rank_names)
     local x_card = {
       name = "X Card",
       slug = "m_xcard",
-      atlas = "m_xcard",
+      atlas = "m_xcard_1",
+      atlas_hc = "m_xcard_2",
       pos = {x=0,y=2},
       effect = "X Card",
       label = "X Card",
       playing_card = true,
-      display_face = false,
+      display_rank = false,
       config = {
         extra = {
         },
@@ -29,10 +35,6 @@ function SMODS.INIT.X_Card()
       }
     }
     newEnhancement(x_card)
-    --G.P_CENTERS.m_xcard = x_card
-    --G.P_CENTER_POOLS['Enhanced'][x_card.order-1] = x_card
-    --sendDebugMessage(tostring(G.P_CENTER_POOLS['Enhanced'][x_card.order-1].name))
-    --G.localization.descriptions['Enhanced']['m_xcard']=
 
     local m_xcard_sprite = SMODS.Sprite:new(
       "m_xcard_1",
@@ -95,10 +97,6 @@ function SMODS.INIT.X_Card()
         "X Card"
       }
     end
-    rank_names = {"Jack","Queen","King", "Ace"}
-    for i=10, 2, -1 do
-      table.insert(rank_names, 1, tostring(i))
-    end
 end
 
 local nominalref = Card.get_nominal
@@ -128,50 +126,66 @@ function Card:set_ability(center, initial, delay_sprites)
   if center.key == "m_xcard" then
       self.ability = {
         extra = {
-          display_rank = false,
-          display_face = false
+          display_rank = false
         }
       }
   end
   return setability_ref(self, center, initial, delay_sprites)
 end
 
-local setsprites_ref = Card.set_sprites
+local set_sprites_ref = Card.set_sprites
 function Card:set_sprites(_center, _front)
-    if _center and _center.key and _center.key == "m_xcard" then
-      if self.ability == nil then self.ability = {} end
-      if self.ability.extra == nil then self.ability.extra = {} end
-      if (self.ability.display_rank == nil) then self.ability.display_rank = false end
-	  local suit = 0
-	  if self.base and self.base.suit_nominal then
-	    suit = self.base.suit_nominal * 100 - 1
-	  end
-	  if suit == 0 or suit == 2 then
-	    suit = 2 - suit
-	  end
-	  local contrast = "_"..(G.SETTINGS.colourblind_option and 2 or 1)
-      if (self.ability.display_rank == true) then
-        self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['cards'..contrast], {x = self.ability.fake_rank-2, y = suit})
-      elseif suit > 3 then
-	    if G.ASSET_ATLAS['m_xcard_'..string.gsub(string.lower(tostring(self.base.suit))," ","_")..contrast] ~= nil then
-	      self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['m_xcard_'..string.gsub(string.lower(tostring(self.base.suit))," ","_")..contrast], {x = 0, y = 0})
-		else
-		  self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['m_xcard_'..string.gsub(string.lower(tostring(self.base.suit))," ","_")], {x = 0, y = 0})
+	if _center and _center.key and _center.key == "m_xcard" then
+	  local atlas = _center.atlas
+	  local rank_pos = {x = 0, y = 0}
+	  if self.base then
+	    sendDebugMessage(tostring(self.config.card.suit))
+		if SMODS.Card.SUITS[self.config.card.suit] ~= nil then
+	      rank_pos.y = SMODS.Card.SUITS[self.config.card.suit].card_pos.y
 		end
-	  else
-        self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['m_xcard'..contrast], {x = 0, y = suit})
-      end
-      self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['centers'], {x = 1, y = 0})
-      self.children.center:set_sprite_pos({x = 1, y = 0})
-      if not self.children.back then
-        self.children.back = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS["centers"], self.params.bypass_back or (self.playing_card and G.GAME[self.back].pos or G.P_CENTERS['b_red'].pos))
-        align_layer(self, self.children.back)
-      end
-      align_layer(self, self.children.front)
-      align_layer(self, self.children.center)
-    else
-      setsprites_ref(self,_center,_front)
-    end
+	    if self.ability and self.ability.display_rank == true then
+		  sendDebugMessage("Looking for "..rank_names[self.ability.fake_rank].."...")
+		  local faked_rank = SMODS.Card.RANKS[rank_names[self.ability.fake_rank]] or SMODS.Card.RANKS[self.ability.fake_rank]
+          if faked_rank then
+		    sendDebugMessage("Rank found. Looking for \"atlas_"..(G.SETTINGS.colourblind_option and "high" or "low").."_contrast\"...")
+		    atlas = faked_rank["atlas_"..(G.SETTINGS.colourblind_option and "high" or "low").."_contrast"]
+	        rank_pos.x = faked_rank.pos.x
+		    sendDebugMessage(rank_names[self.ability.fake_rank].." found. Attempting to use position "..rank_pos.x.." in atlas "..tostring(atlas).."...")
+		  else
+		    sendDebugMessage(rank_names[self.ability.fake_rank].." not found. Using default card atlas.")
+			atlas = SMODS.Card.SUITS[self.config.card.suit]["card_atlas_"..((G.SETTINGS.colourblind_option) and "high" or "low").."_contrast"]
+	        rank_pos.x = self.ability.fake_rank-2
+	      end
+	    end
+	  end
+	  if G.ASSET_ATLAS[atlas] == nil then
+	    sendDebugMessage("Asset "..tostring(atlas).." not found. Using default atlas.")
+	    atlas = SMODS.Card.SUITS[self.config.card.suit]["card_atlas_"..((G.SETTINGS.colourblind_option) and "high" or "low").."_contrast"] or 'cards_'..(G.SETTINGS.colourblind_option and 2 or 1)
+	  end
+	  self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[atlas], rank_pos)
+	  self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['centers'], {x = 1, y = 0})
+	  align_layer(self, "front")
+	  align_layer(self, "center")
+	  if not self.children.back then
+	    self.children.back = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS["centers"], self.params.bypass_back or (self.playing_card and G.GAME[self.back].pos or G.P_CENTERS['b_red'].pos))
+	  end
+	  align_layer(self, "back")
+	else
+	  set_sprites_ref(self,_center,_front)
+	end
+end
+
+function fake_atlas(card)
+  contrast = G.SETTINGS.colourblind_option
+  if card.base and card.ability.fake_rank then
+    if SMODS.Card.RANKS[card.ability.fake_rank] then
+	  return SMODS.Card.RANKS[card.ability.fake_rank]["atlas_"..(contrast and "high" or "low").."_contrast"]
+	end
+    if SMODS.Card.SUITS[card.base.suit] then
+	  return SMODS.Card.SUITS[card.base.suit]["card_atlas_"..(contrast and "high" or "low").."_contrast"]
+	end
+  end
+  return "cards_"..(contrast and 2 or 1)
 end
 
 function get_loc_vars(name)
@@ -228,7 +242,7 @@ function highlight_card(card, percent, dir)
     highlight_card_ref(card, percent, dir)
     if card ~= nil and card.ability ~= nil and card.ability.effect == 'X Card' then
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() card:flip();play_sound('tarot2', 0.95, 0.6);card:juice_up(0.3, 0.3);return true end }))
-        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.65,func = function() card:flip();play_sound('tarot1', 0.95, 0.6);card:juice_up(0.3, 0.3);card.ability.display_rank = (dir == 'up');if dir ~= 'up' then card.ability.extra.random_rank = nil; end;card:set_sprites(card.config.center, card.config.front);return true end }))
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.6,func = function() card.ability.display_rank = (dir == 'up');card:set_sprites(card.config.center, card.config.front);card:flip();play_sound('tarot1', 0.95, 0.6);card:juice_up(0.3, 0.3);if dir ~= 'up' then card.ability.extra.random_rank = nil; end;return true end }))
     end
     -- if card.ability.extra and card.ability.fake_rank then
       -- if dir == 'up' then
@@ -280,67 +294,9 @@ function evaluate_poker_hand(hand)
     "Four of a Kind",
     "Five of a Kind"
   }
-
-  --results = evaluate_poker_hand_ref(hand)
-  
-  results["High Card"] = get_highest(hand)
-  for i=1,#of_a_kind do
-    results[of_a_kind[i]] = get_X_same(i+1,hand)
-  end
-  results["Flush"] = get_flush(hand)
-  results["Straight"] = get_straight(hand)
-  
-  if #results["Pair"] == 2 and #results["Straight"] == 0 then
-    results["Two Pair"] = 
-	{
-	  {
-	    results["Pair"][1][1],
-	    results["Pair"][1][2],
-	    results["Pair"][2][1],
-	    results["Pair"][2][2]
-      }
-	}
-  end
-  
-  if #results["Pair"] > 0 and #results["Three of a Kind"] > 0 then
-    local values = {
-      results["Pair"][1][1],
-	  results["Three of a Kind"][1][1]
-    }
-	sendDebugMessage(tostring(values[1]).." and "..tostring(values[2]))
-	if values[1]:get_id() ~= values[2]:get_id() then
-	  results["Full House"] =
-	  {
-	    {
-		  results["Three of a Kind"][1][1],
-		  results["Three of a Kind"][1][2],
-		  results["Three of a Kind"][1][3],
-		  results["Pair"][1][1],
-		  results["Pair"][1][2]
-		}
-	  }
-	  results["Two Pair"] = --done to preserve Full House / Two Pair compatibility
-	  {
-	    {
-		  results["Three of a Kind"][1][1],
-		  results["Three of a Kind"][1][2],
-		  results["Pair"][1][1],
-		  results["Pair"][1][2]
-		}
-	  }
-	end
-  end
-  
-  if #results["Flush"] > 0 then
-    if #results["Straight"] > 0 then
-      results["Straight Flush"] = merge(results["Flush"],results["Straight"])
-	elseif #results["Full House"] > 0 then
-	  results["Flush House"] = results["Full House"]
-	elseif #results["Five of a Kind"] > 0 then
-	  results["Flush Five"] = results["Five of a Kind"]
-	end
-  end
-  
+  sendDebugMessage("Poker hand evaluating...")
+  results = evaluate_poker_hand_ref(hand)
+  sendDebugMessage("Poker hand evaluated.")
   for i=1, #hand do
     if hand[i].config.center == G.P_CENTERS['m_xcard'] then
 	  --sendDebugMessage(tostring(hand[i].ability.fake_rank))
@@ -374,7 +330,9 @@ function evaluate_poker_hand(hand)
           for k, v in pairs(hand) do
             if v:get_id() == rng then
               --sendDebugMessage("Found "..rng.." in hand.")
-            elseif v:get_id() >= 2 then
+            elseif v.ability and (v.ability.fake_rank == rng or v.ability.random_rank == rng) then
+			  --sendDebugMessage("Found "..rng.." in hand.")
+			else
               --sendDebugMessage("Did not find "..rng.." in hand.")
               if not hand[i].ability.extra then hand[i].ability.extra = {} end
               hand[i].ability.fake_rank = rng
@@ -434,16 +392,19 @@ function get_X_same(num, hand)
       if hand[j].config.center == G.P_CENTERS.m_xcard then
 	    table.insert(x_cards,j)
 	  elseif hand[j].config.center ~= G.P_CENTERS.m_stone then
-	    lists[hand[j]:get_id()-1][#lists[hand[j]:get_id()-1]+1] = hand[j]
+	    lists[hand[j].base.value] = hand[j]
 	  end
 	end
 	if #x_cards == 0 then
 	  return get_X_same_ref(num, hand)
 	end
-	for i=13,1,-1 do
-	  if #lists[i] > 0 and #x_cards > 0 then
+	if #x_cards == num or #x_cards == #hand then
+	  return {}
+	end
+	for k,v in pairs(lists) do
+	  if #v > 0 and #x_cards > 0 then
 	    hand[x_cards[1]].ability.fake_rank = i+1
-	    lists[i][#lists[i]+1] = hand[x_cards[1]]
+	    v[#v+1] = hand[x_cards[1]]
 		table.remove(x_cards,1)
 	  end
 	  --sendDebugMessage(#lists[i].." "..rank_names[i].."...?")
@@ -515,7 +476,7 @@ function get_straight(hand)
 		  if fake+i == id then
 		    --sendDebugMessage("Skipped "..rank_names[fake+i-1])
 		  else
-		    --sendDebugMessage("Added "..rank_names[fake+i-1])
+		    sendDebugMessage("Added "..rank_names[fake+i-1])
 		    vals[#vals+1] = fake+i
 		  end
 		end
@@ -525,8 +486,8 @@ function get_straight(hand)
 			--sendDebugMessage("Setting fake rank to "..rank_names[vals[1]-1])
 			if not hand[i].ability then hand[i].ability = {} end
 		    if not hand[i].ability.extra then hand[i].ability.extra = {} end
-			hand[i].ability.straight_rank = vals[1]
-			table.remove(vals,1)
+			hand[i].ability.straight_rank = vals[#vals]
+			table.remove(vals)
 		  end
 		  table.insert(results,1, hand[i])
 		end
@@ -554,12 +515,12 @@ function get_straight(hand)
 		  end
 		end
 		table.sort(hand, function (a, b) return a.old_order < b.old_order end)
-		for i=#hand,1,-1 do
+		for i=1,#hand do
 		  --sendDebugMessage("Card "..i.." ("..#vals.." fake vals left)")
 		  if hand[i].config.center == G.P_CENTERS.m_xcard and #vals > 0 then
 			--sendDebugMessage("Setting fake rank to "..rank_names[vals[1]-1])
-			hand[i].ability.straight_rank = vals[1]
-			table.remove(vals,1)
+			hand[i].ability.straight_rank = vals[#vals]
+			table.remove(vals)
 		  end
 		  --table.insert(results,1, hand[i])
 		end

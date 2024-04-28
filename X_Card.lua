@@ -64,10 +64,18 @@ function SMODS.INIT.X_Card()
       71, 95,
       "asset_atli"
     )
+    local m_xcard_clubs_sprite = SMODS.Sprite:new(
+      "m_xcard_clubs",
+      this_mod.path,
+      "m_xcard_clubs.png",
+      71, 95,
+      "asset_atli"
+    )
     m_xcard_sprite:register()
     m_xcard_hi_sprite:register()
     m_xcard_color_sprite:register()
     m_xcard_ink_sprite:register()
+    m_xcard_clubs_sprite:register()
     local pagecupssprite = SMODS.Sprite:new(
       "c_pagecups",
       this_mod.path,
@@ -139,30 +147,36 @@ function Card:set_sprites(_center, _front)
 	  local atlas = _center.atlas
 	  local rank_pos = {x = 0, y = 0}
 	  if self.base then
-	    sendDebugMessage(tostring(self.config.card.suit))
-		if SMODS.Card.SUITS[self.config.card.suit] ~= nil then
-	      rank_pos.y = SMODS.Card.SUITS[self.config.card.suit].card_pos.y
+	    card_suit = nil
+        card_suit = self.base.suit or card_suit
+        card_suit = self.config.card.suit or card_suit
+		if card_suit == nil then		
+          for k,v in pairs(SMODS.Card.SUITS) do
+		   if _center.pos.y == v.card_pos.y then
+		     card_suit = v.name
+		   end
+		  end
+		end
+	    sendDebugMessage(card_suit.." is "..((SMODS.Card.SUITS[self.base.suit]==nil) and "" or "not").." nil.")
+		if SMODS.Card.SUITS[self.base.suit] ~= nil then
+	      rank_pos.y = SMODS.Card.SUITS[self.base.suit].card_pos.y
 		end
 	    if self.ability and self.ability.display_rank == true then
-		  sendDebugMessage("Looking for "..rank_names[self.ability.fake_rank].."...")
-		  local faked_rank = SMODS.Card.RANKS[rank_names[self.ability.fake_rank]] or SMODS.Card.RANKS[self.ability.fake_rank]
+		  local faked_rank = SMODS.Card.RANKS[self.ability.fake_rank]
           if faked_rank then
-		    sendDebugMessage("Rank found. Looking for \"atlas_"..(G.SETTINGS.colourblind_option and "high" or "low").."_contrast\"...")
 		    atlas = faked_rank["atlas_"..(G.SETTINGS.colourblind_option and "high" or "low").."_contrast"]
 	        rank_pos.x = faked_rank.pos.x
-		    sendDebugMessage(rank_names[self.ability.fake_rank].." found. Attempting to use position "..rank_pos.x.." in atlas "..tostring(atlas).."...")
 		  else
-		    sendDebugMessage(rank_names[self.ability.fake_rank].." not found. Using default card atlas.")
 			atlas = SMODS.Card.SUITS[self.config.card.suit]["card_atlas_"..((G.SETTINGS.colourblind_option) and "high" or "low").."_contrast"]
-	        rank_pos.x = self.ability.fake_rank-2
+	        rank_pos.x = math.max(self.ability.fake_rank-2,12)
 	      end
 	    end
 	  end
+	  _center.pos = rank_pos
 	  if G.ASSET_ATLAS[atlas] == nil then
-	    sendDebugMessage("Asset "..tostring(atlas).." not found. Using default atlas.")
 	    atlas = SMODS.Card.SUITS[self.config.card.suit]["card_atlas_"..((G.SETTINGS.colourblind_option) and "high" or "low").."_contrast"] or 'cards_'..(G.SETTINGS.colourblind_option and 2 or 1)
 	  end
-	  self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[atlas], rank_pos)
+	  self.children.front = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS[atlas], _center.pos)
 	  self.children.center = Sprite(self.T.x, self.T.y, self.T.w, self.T.h, G.ASSET_ATLAS['centers'], {x = 1, y = 0})
 	  align_layer(self, "front")
 	  align_layer(self, "center")
@@ -447,7 +461,7 @@ function get_straight(hand)
       local normal_ranks = {}
       local x_count = 0
       local check_var = hand[1]:get_id()
-      local ace_in = check_var == 14
+      local ace_in = check_var == SMODS.Card.MAX_ID
       local target = (four_fingers and 4 or 5)
       for i=1, #hand do
 	    if hand[i].ability == nil then hand[i].ability = {} end
@@ -462,21 +476,21 @@ function get_straight(hand)
 	  local results = {}
 	  --sendDebugMessage("There are "..#normal_ranks.." normal cards...?")
 	  if #normal_ranks < 2 then
-	    local id = 9
+	    local id = SMODS.Card.MAX_ID-6
 	    if #normal_ranks == 1 then
-	      id = math.min(hand[normal_ranks[1]]:get_id(),9)
+	      id = math.min(hand[normal_ranks[1]]:get_id(),id)
 		end
 		local fake = id
 		local vals = {}
 		table.sort(hand, function (a, b) return a.old_order < b.old_order end)
 		for i=1,#hand-#normal_ranks do
-		  if fake+i < 14 and can_skip then
+		  if fake+i < SMODS.Card.MAX_ID and can_skip then
 		    fake = fake + 1
 		  end
 		  if fake+i == id then
 		    --sendDebugMessage("Skipped "..rank_names[fake+i-1])
 		  else
-		    sendDebugMessage("Added "..rank_names[fake+i-1])
+		    --sendDebugMessage("Added "..SMODS.Card.RANKS[fake+i-1].name)
 		    vals[#vals+1] = fake+i
 		  end
 		end
@@ -548,7 +562,7 @@ function get_straight(hand)
 			end
 			table.insert(vals,ids[i])
 			hand[normal_ranks[i]].ability.extra.add = true
-		  elseif (can_loop and 14+ids[2]-ids[1] <= delta_var+#x_cards) then
+		  elseif (can_loop and SMODS.Card.MAX_ID+ids[2]-ids[1] <= delta_var+#x_cards) then
 		    if ids[1]-ids[2] > delta_var then
 			  offset = i-#x_cards
 			end
@@ -567,7 +581,7 @@ function get_straight(hand)
 		  if #vals == target - 1 and vals[target - 1] == 2 then
 		    table.insert(fake_vals,14)
 		  else
-		    if i > 14 then i = 10 end
+		    if i > SMODS.Card.MAX_ID then i = i - #hand + #fake_vals end
 		    table.insert(fake_vals, i)
 		    i = i + 1
 		  end

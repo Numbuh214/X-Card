@@ -26,13 +26,22 @@ function SMODS.INIT.X_Card()
       display_rank = false,
       config = {
         extra = {
+		  suit = "get_suit"
         },
       },
       loc_txt =
       {
-        "When played, becomes the",
+        "When played, becomes a {V:1}#1#{} card of the",
         "best {C:attention}unique{} rank possible"
-      }
+      },
+	  loc_vars =
+	  {
+	    "suit",
+		colours = 
+		{
+		  "suit"
+		}
+	  }
     }
     newEnhancement(x_card)
 
